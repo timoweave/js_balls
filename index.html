@@ -90,7 +90,13 @@
 
 		//create one circle when the game starts
 		this.createNewCircle(document.body.clientWidth/2, document.body.clientHeight/2);
+                this.resize();
 	}
+      
+        PlayGround.prototype.resize = function() {
+              document.getElementById('svg').style.width = window.innerWidth;
+              document.getElementById('svg').style.height = window.innerHeight;
+        }
 
 	var playground = new PlayGround();
 	setInterval(playground.loop, 15);
@@ -98,7 +104,11 @@
 	document.onclick = function(e) {
 		playground.createNewCircle(e.x,e.y);
 	}
-	
+
+        document.onresize = function () {
+                playground.resize();
+        }
+
 	</script>
 
 </body>
