@@ -4,14 +4,14 @@
 </head>
 <body>
 
-	<svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+	<svg id="svg" xmlns="http://www.w3.org/2000/svg" style="margin:1em;"></svg>
 
 	<script>
-	function Circle(cx, cy, html_id)
+	function Circle(cx, cy, r, html_id)
 	{
 		var html_id = html_id;
-		this.info = { cx: cx,  cy: cy , r:10};
-		
+		this.info = { cx: cx,  cy: cy , r:r};
+
 		//private function that generates a random number
 		var randomNumberBetween = function(min, max){
 			return Math.random()*(max-min) + min;
@@ -24,13 +24,13 @@
 				y: randomNumberBetween(-3,3)
 			}
 
-			//create a circle 
-			var circle = makeSVG('circle', 
+			//create a circle
+			var circle = makeSVG('circle',
 				{ 	cx: this.info.cx,
 				  	cy: this.info.cy,
 				  	r:  this.info.r,
 				  	id: html_id,
-				  	style: "fill: black"
+				  	style: "fill: black; width: 98%; margin:auto;"
 				});
 
 			document.getElementById('svg').appendChild(circle);
@@ -39,18 +39,45 @@
 		this.update = function(time){
 			var el = document.getElementById(html_id);
 
-			//see if the circle is going outside the browser. if it is, reverse the velocity
-			if( this.info.cx + this.info.r > document.body.clientWidth || this.info.cx < this.info.r)
-			{
-				this.info.velocity.x = this.info.velocity.x * -1;
-			}
-			if( this.info.cy + this.info.r > document.body.clientHeight || this.info.cy < this.info.r)
-			{
-				this.info.velocity.y = this.info.velocity.y * -1;
+			var dx = this.info.velocity.x*time;
+			var dy = this.info.velocity.y*time;
+
+			if ((this.info.cx + this.info.r + dx) > document.body.clientWidth) {
+                                var dx2 = (this.info.cx + this.info.r + dx) - document.body.clientWidth;
+                                var dx1 = (dx - dx2);
+				dx = dx1;
+				if (this.info.velocity.x > 0) {
+					this.info.velocity.x *= -1;
+				}
+                        }
+
+			if ((this.info.cx - this.info.r + dx) < 0) {
+				var dx2 = (this.info.cx - this.info.r + dx);
+				dx = -1* dx2;
+				if (this.info.velocity.x < 0) {
+					this.info.velocity.x *= -1;
+				}
 			}
 
-			this.info.cx = this.info.cx + this.info.velocity.x*time;
-			this.info.cy = this.info.cy + this.info.velocity.y*time;
+			if ((this.info.cy + this.info.r + dy) > document.body.clientHeight) {
+                                var dy2 = (this.info.cy + this.info.r + dy) - document.body.clientHeight;
+                                var dy1 = (dy - dy2);
+				dy = dy1;
+				if (this.info.velocity.y > 0) {
+					this.info.velocity.y *= -1;
+				}
+                        }
+
+			if ((this.info.cy - this.info.r + dy) < 0) {
+				var dy2 = (this.info.cy - this.info.r + dy);
+				dy = -1 * dy2;
+				if (this.info.velocity.y < 0) {
+					this.info.velocity.y *= -1;
+				}
+			}
+
+			this.info.cx = this.info.cx + dx;
+			this.info.cy = this.info.cy + dy;
 
 			el.setAttribute("cx", this.info.cx);
 			el.setAttribute("cy", this.info.cy);
@@ -82,17 +109,17 @@
 			}
 		}
 
-		this.createNewCircle = function(x,y){
-			var new_circle = new Circle(x,y,counter++);
+		this.createNewCircle = function(x,y, r){
+			var new_circle = new Circle(x,y,r,counter++);
 			circles.push(new_circle);
 			// console.log('created a new circle!', new_circle);
 		}
 
 		//create one circle when the game starts
-		this.createNewCircle(document.body.clientWidth/2, document.body.clientHeight/2);
+		this.createNewCircle(document.body.clientWidth/2, document.body.clientHeight/2, 10);
                 this.resize();
 	}
-      
+
         PlayGround.prototype.resize = function() {
               document.getElementById('svg').style.width = document.body.clientWidth;
               document.getElementById('svg').style.height = document.body.clientHeight;
@@ -100,14 +127,26 @@
 
 	var playground = new PlayGround();
 	setInterval(playground.loop, 15);
+        var mousedown_time = 0;
 
-	document.onclick = function(e) {
-		playground.createNewCircle(e.x,e.y);
-	}
-
-        document.onresize = function () {
+        window.onresize = function () {
                 playground.resize();
         }
+
+	function getTime(){
+		var date = new Date();
+		return date.getTime();
+	}
+
+	document.onmousedown = function(e){
+		mousedown_time = getTime();
+	}
+
+	document.onmouseup = function(e){
+		var time_pressed = getTime() - mousedown_time;
+                var r = Math.min(time_pressed, 40); // at most 40
+		playground.createNewCircle(e.x,e.y,r);
+	}
 
 	</script>
 
